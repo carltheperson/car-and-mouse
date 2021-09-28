@@ -6,7 +6,8 @@ import (
 
 type Entity interface {
 	Draw(ctx js.Value)
-	Update()
+	Update(mouseX int, mouseY int)
+	GetShouldDraw() bool
 }
 
 type Game struct {
@@ -56,13 +57,15 @@ func (g *Game) RunMainLoop() {
 	var renderFrame js.Func
 
 	renderFrame = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		g.ctx.Call("beginPath")
-		g.ctx.Call("rect", g.mouseX-20, g.mouseY-20, 20, 20)
-		g.ctx.Call("stroke")
+		// g.ctx.Call("beginPath")
+		// g.ctx.Call("rect", g.mouseX-20, g.mouseY-20, 20, 20)
+		// g.ctx.Call("stroke")
 
 		for _, entity := range g.Entities {
-			entity.Update()
-			entity.Draw(g.ctx)
+			entity.Update(g.mouseX, g.mouseY)
+			if entity.GetShouldDraw() {
+				entity.Draw(g.ctx)
+			}
 		}
 
 		js.Global().Call("requestAnimationFrame", renderFrame)
