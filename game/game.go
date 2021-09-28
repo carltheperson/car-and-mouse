@@ -4,6 +4,11 @@ import (
 	"syscall/js"
 )
 
+type Entity interface {
+	Draw(ctx js.Value)
+	Update()
+}
+
 type Game struct {
 	body         js.Value
 	document     js.Value
@@ -13,6 +18,7 @@ type Game struct {
 	windowHeight int
 	mouseX       int
 	mouseY       int
+	Entities     []Entity
 }
 
 func NewGame(canvasId string) Game {
@@ -53,6 +59,11 @@ func (g *Game) RunMainLoop() {
 		g.ctx.Call("beginPath")
 		g.ctx.Call("rect", g.mouseX-20, g.mouseY-20, 20, 20)
 		g.ctx.Call("stroke")
+
+		for _, entity := range g.Entities {
+			entity.Update()
+			entity.Draw(g.ctx)
+		}
 
 		js.Global().Call("requestAnimationFrame", renderFrame)
 		return nil
