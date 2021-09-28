@@ -1,7 +1,6 @@
 package game
 
 import (
-	"fmt"
 	"syscall/js"
 )
 
@@ -10,10 +9,10 @@ type Game struct {
 	document     js.Value
 	canvas       js.Value
 	ctx          js.Value
-	windowWidth  float64
-	windowHeight float64
-	mouseX       float64
-	mouseY       float64
+	windowWidth  int
+	windowHeight int
+	mouseX       int
+	mouseY       int
 }
 
 func NewGame(canvasId string) Game {
@@ -21,18 +20,22 @@ func NewGame(canvasId string) Game {
 	game.document = js.Global().Get("document")
 	game.body = game.document.Get("body")
 	game.canvas = game.document.Call("getElementById", canvasId)
-	game.ctx = game.canvas.Call("getContext", "2d")
-	game.windowWidth = game.body.Get("clientWidth").Float()
-	game.windowHeight = game.body.Get("clientHeight").Float()
+	game.ctx = game.canvas.Call("getContext", "2d", map[string]interface{}{"alpha": false})
+	windowScreen := js.Global().Get("window").Get("screen")
+	game.windowWidth = int(windowScreen.Get("width").Float())
+	game.windowHeight = int(windowScreen.Get("height").Float())
+	game.canvas.Set("width", game.windowWidth)
+	game.canvas.Set("height", game.windowHeight)
+	game.ctx.Set("fillStyle", "white")
+	game.ctx.Call("fillRect", 0, 0, game.windowWidth, game.windowHeight)
 	return game
 }
 
 func (g *Game) getMouseMoveEventListener() js.Func {
 	return js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		event := args[0]
-		g.mouseX = event.Get("clientX").Float()
-		g.mouseY = event.Get("clientY").Float()
-		fmt.Println(g.mouseX)
+		g.mouseX = int(event.Get("clientX").Float())
+		g.mouseY = int(event.Get("clientY").Float())
 		return nil
 	})
 }
@@ -47,7 +50,10 @@ func (g *Game) RunMainLoop() {
 	var renderFrame js.Func
 
 	renderFrame = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		fmt.Println("Hello")
+		g.ctx.Call("beginPath")
+		g.ctx.Call("rect", g.mouseX-20, g.mouseY-20, 20, 20)
+		g.ctx.Call("stroke")
+
 		js.Global().Call("requestAnimationFrame", renderFrame)
 		return nil
 	})
