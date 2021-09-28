@@ -1,7 +1,8 @@
 package main
 
-import "fmt"
+import "github.com/carltheperson/car-and-mouse/game"
 
 func main() {
-	fmt.Println("Hello world")
+	g := game.NewGame("canvas")
+	g.RunMainLoop()
 }

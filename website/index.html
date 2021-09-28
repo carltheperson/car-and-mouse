@@ -11,6 +11,8 @@ license that can be found in the LICENSE file.
   </head>
 
   <body>
+    <canvas id="canvas"></canvas>
+
     <!--
 	Add the following polyfill for Microsoft Edge 17/18 support:
 	<script src="https://cdn.jsdelivr.net/npm/text-encoding@0.7.0/lib/encoding.min.js"></script>
@@ -19,7 +21,6 @@ license that can be found in the LICENSE file.
     <script src="wasm_exec.js"></script>
     <script>
       if (!WebAssembly.instantiateStreaming) {
-        // polyfill
         WebAssembly.instantiateStreaming = async (resp, importObject) => {
           const source = await (await resp).arrayBuffer();
           return await WebAssembly.instantiate(source, importObject);
@@ -32,19 +33,11 @@ license that can be found in the LICENSE file.
         .then((result) => {
           mod = result.module;
           inst = result.instance;
-          document.getElementById("runButton").disabled = false;
+          go.run(inst);
         })
         .catch((err) => {
           console.error(err);
         });
-
-      async function run() {
-        console.clear();
-        await go.run(inst);
-        inst = await WebAssembly.instantiate(mod, go.importObject); // reset instance
-      }
     </script>
-
-    <button onClick="run();" id="runButton" disabled>Run</button>
   </body>
 </html>
