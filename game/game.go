@@ -27,7 +27,7 @@ func NewGame(canvasId string) Game {
 	game.document = js.Global().Get("document")
 	game.body = game.document.Get("body")
 	game.canvas = game.document.Call("getElementById", canvasId)
-	game.ctx = game.canvas.Call("getContext", "2d", map[string]interface{}{"alpha": false})
+	game.ctx = game.canvas.Call("getContext", "2d")
 	windowScreen := js.Global().Get("window").Get("screen")
 	game.windowWidth = int(windowScreen.Get("width").Float())
 	game.windowHeight = int(windowScreen.Get("height").Float())
@@ -57,13 +57,20 @@ func (g *Game) RunMainLoop() {
 	var renderFrame js.Func
 
 	renderFrame = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		// g.ctx.Call("beginPath")
-		// g.ctx.Call("rect", g.mouseX-20, g.mouseY-20, 20, 20)
-		// g.ctx.Call("stroke")
+		shouldDraw := false
+		for _, entity := range g.Entities {
+			if entity.GetShouldDraw() {
+				shouldDraw = true
+			}
+		}
+
+		if shouldDraw {
+			g.ctx.Call("clearRect", 0, 0, g.windowWidth, g.windowHeight)
+		}
 
 		for _, entity := range g.Entities {
 			entity.Update(g.mouseX, g.mouseY)
-			if entity.GetShouldDraw() {
+			if shouldDraw {
 				entity.Draw(g.ctx)
 			}
 		}
