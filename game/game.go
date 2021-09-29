@@ -6,13 +6,13 @@ import (
 )
 
 const (
-	skipFrequency = 3
+	skipFrequency = 2
 )
 
 type Entity interface {
 	Draw(ctx js.Value)
 	Update(mouseX int, mouseY int, mpf float64)
-	GetShouldDraw() bool
+	ShouldDraw() bool
 }
 
 type Game struct {
@@ -40,7 +40,7 @@ func NewGame(canvasId string) Game {
 	game.canvas.Set("height", game.windowHeight)
 	game.ctx.Set("fillStyle", "white")
 	game.ctx.Call("fillRect", 0, 0, game.windowWidth, game.windowHeight)
-	time.Sleep(300 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 	return game
 }
 
@@ -61,9 +61,9 @@ func (g *Game) RunMainLoop() {
 	g.document.Call("addEventListener", "mousemove", mouseMoveEventListener)
 
 	var renderFrame js.Func
+	var mpf float64
 	frameTime := time.Now()
 	frameCount := 1
-	mpf := 1.0
 
 	renderFrame = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		if frameCount%skipFrequency == 0 {
@@ -76,7 +76,7 @@ func (g *Game) RunMainLoop() {
 
 		shouldDraw := false
 		for _, entity := range g.Entities {
-			if entity.GetShouldDraw() {
+			if entity.ShouldDraw() {
 				shouldDraw = true
 			}
 		}

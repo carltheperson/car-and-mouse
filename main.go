@@ -7,6 +7,6 @@ import (
 
 func main() {
 	g := game.NewGame("canvas")
-	g.Entities = append(g.Entities, car.NewCar(100, 100))
+	g.Entities = append(g.Entities, car.NewCar(300, 300))
 	g.RunMainLoop()
 }
