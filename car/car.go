@@ -7,8 +7,10 @@ import (
 	"github.com/carltheperson/car-and-mouse/math"
 )
 
-const pxsPerMpf = 100
-const maxDif = 0.12
+const pxsPerMpf = 60
+
+// const maxDif = 0.05
+const maxDif = 0.5
 
 type Car struct {
 	x          int
@@ -26,8 +28,8 @@ func NewCar(x int, y int) *Car {
 	return &Car{
 		x:          x,
 		y:          y,
-		width:      50,
-		height:     100,
+		width:      25,
+		height:     50,
 		direction:  0.0,
 		correcting: true,
 	}
