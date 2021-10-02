@@ -46,6 +46,14 @@ func ConvertDirectionVectorToRadians(vector Vector2D) float64 {
 	return math.Atan2(vector.A, vector.B) * -1
 }
 
+func GetRadiansBetweenTwoVectors(v1 Vector2D, v2 Vector2D) float64 {
+	return math.Atan2(v1.A-v2.A, v1.B-v2.B)
+}
+
+func ConvertRadiansToDirectionVector(radians float64) Vector2D {
+	return Vector2D{A: math.Cos(radians), B: math.Sin(radians)}
+}
+
 func RotatePoint(point Vector2D, center Vector2D, angle float64) Vector2D {
 	newPoint := Vector2D{A: point.A - center.A, B: point.B - center.B}
 

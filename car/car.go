@@ -1,31 +1,35 @@
 package car
 
 import (
+	stdMath "math"
 	"syscall/js"
 
 	"github.com/carltheperson/car-and-mouse/math"
 )
 
 const pxsPerMpf = 100
+const maxDif = 0.12
 
 type Car struct {
-	x         int
-	y         int
-	lastX     int
-	lastY     int
-	width     int
-	height    int
-	direction math.Vector2D
+	x          int
+	y          int
+	lastX      int
+	lastY      int
+	width      int
+	height     int
+	direction  float64
+	correcting bool
 }
 
 func NewCar(x int, y int) *Car {
 
 	return &Car{
-		x:         x,
-		y:         y,
-		width:     50,
-		height:    100,
-		direction: math.Vector2D{},
+		x:          x,
+		y:          y,
+		width:      50,
+		height:     100,
+		direction:  0.0,
+		correcting: true,
 	}
 }
 
@@ -42,7 +46,7 @@ func (c *Car) Draw(ctx js.Value) {
 		{A: float64(c.x), B: float64(c.y + c.height)},
 	}
 	for _, point := range points {
-		transformedPoint := math.RotatePoint(point, center, math.ConvertDirectionVectorToRadians(c.direction))
+		transformedPoint := math.RotatePoint(point, center, c.direction)
 		ctx.Call("lineTo", int(transformedPoint.A), int(transformedPoint.B))
 	}
 
@@ -54,11 +58,37 @@ func (c *Car) Update(mouseX int, mouseY int, mpf float64) {
 	c.lastX = c.x
 	c.lastY = c.y
 
-	mouseV := math.Vector2D{A: float64(mouseX - (c.x + c.width/2)), B: float64(mouseY - (c.y + c.height/2))}
-	c.direction = mouseV.GetUnitVector()
+	mouseVector := math.Vector2D{A: float64(mouseX - (c.x + c.width/2)), B: float64(mouseY - (c.y + c.height/2))}
+	mouseRadians := math.ConvertDirectionVectorToRadians(mouseVector.GetUnitVector())
 
-	c.x += int(c.direction.A * mpf * pxsPerMpf)
-	c.y += int(c.direction.B * mpf * pxsPerMpf)
+	shouldCorrect := mouseRadians < 0
+
+	if c.correcting && mouseRadians > 0 && mouseRadians < 1 {
+		c.direction -= 2 * stdMath.Pi
+	}
+	if !c.correcting && mouseRadians < 0 && mouseRadians > -1 {
+		c.direction += 2 * stdMath.Pi
+	}
+	if mouseRadians < 0 {
+		mouseRadians += 2 * stdMath.Pi
+	}
+
+	c.correcting = shouldCorrect
+
+	directionDifference := c.direction - mouseRadians
+
+	if directionDifference < 0 {
+		directionDifference = stdMath.Max(directionDifference, -maxDif)
+	} else if directionDifference > 0 {
+		directionDifference = stdMath.Min(directionDifference, maxDif)
+	}
+
+	c.direction = c.direction - directionDifference*(mpf*10)
+	directionVector := math.ConvertRadiansToDirectionVector(c.direction)
+	directionUnitVector := directionVector.GetUnitVector()
+
+	c.x -= int(directionUnitVector.B * mpf * pxsPerMpf)
+	c.y += int(directionUnitVector.A * mpf * pxsPerMpf)
 }
 
 func (c *Car) ShouldDraw() bool {

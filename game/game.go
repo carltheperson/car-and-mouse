@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	skipFrequency = 2
+	skipFrequency = 1
 )
 
 type Entity interface {
@@ -66,7 +66,7 @@ func (g *Game) RunMainLoop() {
 	frameCount := 1
 
 	renderFrame = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		if frameCount%skipFrequency == 0 {
+		if frameCount%skipFrequency == 0 && skipFrequency != 1 && skipFrequency != 0 {
 			js.Global().Call("requestAnimationFrame", renderFrame)
 			return nil
 		}
