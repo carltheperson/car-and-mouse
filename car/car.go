@@ -2,6 +2,7 @@ package car
 
 import (
 	stdMath "math"
+	"sort"
 	"syscall/js"
 
 	"github.com/carltheperson/car-and-mouse/math"
@@ -9,8 +10,7 @@ import (
 
 const pxsPerMpf = 60
 
-// const maxDif = 0.05
-const maxDif = 0.5
+const maxDif = 0.09
 
 type Car struct {
 	x          int
@@ -48,7 +48,7 @@ func (c *Car) Draw(ctx js.Value) {
 		{A: float64(c.x), B: float64(c.y + c.height)},
 	}
 	for _, point := range points {
-		transformedPoint := math.RotatePoint(point, center, c.direction)
+		transformedPoint := math.RotatePoint(point, center, stdMath.Mod(c.direction, 2*stdMath.Pi))
 		ctx.Call("lineTo", int(transformedPoint.A), int(transformedPoint.B))
 	}
 
@@ -63,21 +63,7 @@ func (c *Car) Update(mouseX int, mouseY int, mpf float64) {
 	mouseVector := math.Vector2D{A: float64(mouseX - (c.x + c.width/2)), B: float64(mouseY - (c.y + c.height/2))}
 	mouseRadians := math.ConvertDirectionVectorToRadians(mouseVector.GetUnitVector())
 
-	shouldCorrect := mouseRadians < 0
-
-	if c.correcting && mouseRadians > 0 && mouseRadians < 1 {
-		c.direction -= 2 * stdMath.Pi
-	}
-	if !c.correcting && mouseRadians < 0 && mouseRadians > -1 {
-		c.direction += 2 * stdMath.Pi
-	}
-	if mouseRadians < 0 {
-		mouseRadians += 2 * stdMath.Pi
-	}
-
-	c.correcting = shouldCorrect
-
-	directionDifference := c.direction - mouseRadians
+	directionDifference := getDirectionDifference(c.direction, mouseRadians)
 
 	if directionDifference < 0 {
 		directionDifference = stdMath.Max(directionDifference, -maxDif)
@@ -91,6 +77,27 @@ func (c *Car) Update(mouseX int, mouseY int, mpf float64) {
 
 	c.x -= int(directionUnitVector.B * mpf * pxsPerMpf)
 	c.y += int(directionUnitVector.A * mpf * pxsPerMpf)
+}
+
+func getDirectionDifference(d1 float64, d2 float64) float64 {
+	frac1 := stdMath.Mod(d1, stdMath.Pi*2)
+	frac2 := stdMath.Mod(d2, stdMath.Pi*2)
+
+	option1 := frac1 - frac2
+	option2 := ((stdMath.Pi*2 - frac1) + frac2) * -1
+	option3 := (stdMath.Pi*2 - frac2) + frac1
+	options := []float64{stdMath.Abs(option1), stdMath.Abs(option2), stdMath.Abs(option3)}
+	sort.Float64s(options)
+	smallestOption := options[0]
+
+	switch smallestOption {
+	case stdMath.Abs(option1):
+		return option1
+	case stdMath.Abs(option2):
+		return option2
+	}
+	return option3
+
 }
 
 func (c *Car) ShouldDraw() bool {
