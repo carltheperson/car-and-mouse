@@ -64,14 +64,9 @@ func (c *Car) Update(mouseX int, mouseY int, mpf float64) {
 	mouseRadians := math.ConvertDirectionVectorToRadians(mouseVector.GetUnitVector())
 
 	directionDifference := getDirectionDifference(c.direction, mouseRadians)
+	regulatedDirectedDifference := getRegulatedDirectionDifference(directionDifference, maxDif)
 
-	if directionDifference < 0 {
-		directionDifference = stdMath.Max(directionDifference, -maxDif)
-	} else if directionDifference > 0 {
-		directionDifference = stdMath.Min(directionDifference, maxDif)
-	}
-
-	c.direction = c.direction - directionDifference*(mpf*10)
+	c.direction = c.direction - regulatedDirectedDifference*(mpf*10)
 	directionVector := math.ConvertRadiansToDirectionVector(c.direction)
 	directionUnitVector := directionVector.GetUnitVector()
 
@@ -79,6 +74,24 @@ func (c *Car) Update(mouseX int, mouseY int, mpf float64) {
 	c.y += int(directionUnitVector.A * mpf * pxsPerMpf)
 }
 
+// getRegulatedDirectionDifference will keep the difference to a max size
+func getRegulatedDirectionDifference(currentDifference float64, maxDifference float64) float64 {
+	if currentDifference < 0 {
+		currentDifference = stdMath.Max(currentDifference, -maxDifference)
+	} else if currentDifference > 0 {
+		currentDifference = stdMath.Min(currentDifference, maxDifference)
+	}
+	return currentDifference
+}
+
+// getDirectionDifference gets the difference between angels (in radians)
+//
+// Important context: Radians range from 0 to 2PI
+//
+// There should be a small difference between a value close to 2PI and a value close to 0
+// because if drawn on a circle they would be close.
+//
+// Examples: 1PI - 1.5PI = 0.5PI, 1.75PI - 0.25PI = 0.5PI, 1.99PI - 0.01 = 0.02PI
 func getDirectionDifference(d1 float64, d2 float64) float64 {
 	frac1 := stdMath.Mod(d1, stdMath.Pi*2)
 	frac2 := stdMath.Mod(d2, stdMath.Pi*2)
@@ -97,7 +110,6 @@ func getDirectionDifference(d1 float64, d2 float64) float64 {
 		return option2
 	}
 	return option3
-
 }
 
 func (c *Car) ShouldDraw() bool {
