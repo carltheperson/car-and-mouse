@@ -2,7 +2,6 @@ package car
 
 import (
 	stdMath "math"
-	"sort"
 	"syscall/js"
 
 	"github.com/carltheperson/car-and-mouse/math"
@@ -70,7 +69,7 @@ func (c *Car) Update(mouseX int, mouseY int, mpf float64) {
 	mouseVector := math.Vector2D{A: float64(mouseX - (c.x + c.width/2)), B: float64(mouseY - (c.y + c.height/2))}
 	mouseRadians := math.ConvertDirectionVectorToRadians(mouseVector.GetUnitVector())
 
-	directionDifference := getDirectionDifference(c.direction, mouseRadians)
+	directionDifference := math.GetDirectionDifference(c.direction, mouseRadians)
 	regulatedDirectedDifference := getRegulatedDirectionDifference(directionDifference, maxTurningDif)
 
 	turningFraction := stdMath.Abs(regulatedDirectedDifference) / maxTurningDif
@@ -96,32 +95,4 @@ func getRegulatedDirectionDifference(currentDifference float64, maxDifference fl
 		currentDifference = stdMath.Min(currentDifference, maxDifference)
 	}
 	return currentDifference
-}
-
-// getDirectionDifference gets the difference between angels (in radians)
-//
-// Important context: Radians range from 0 to 2PI
-//
-// There should be a small difference between a value close to 2PI and a value close to 0
-// because if drawn on a circle they would be close.
-//
-// Examples: 1PI - 1.5PI = 0.5PI, 1.75PI - 0.25PI = 0.5PI, 1.99PI - 0.01 = 0.02PI
-func getDirectionDifference(d1 float64, d2 float64) float64 {
-	frac1 := stdMath.Mod(d1, stdMath.Pi*2)
-	frac2 := stdMath.Mod(d2, stdMath.Pi*2)
-
-	option1 := frac1 - frac2
-	option2 := ((stdMath.Pi*2 - frac1) + frac2) * -1
-	option3 := (stdMath.Pi*2 - frac2) + frac1
-	options := []float64{stdMath.Abs(option1), stdMath.Abs(option2), stdMath.Abs(option3)}
-	sort.Float64s(options)
-	smallestOption := options[0]
-
-	switch smallestOption {
-	case stdMath.Abs(option1):
-		return option1
-	case stdMath.Abs(option2):
-		return option2
-	}
-	return option3
 }
