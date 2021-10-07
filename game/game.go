@@ -15,9 +15,7 @@ const (
 
 const (
 	StateNormal = iota
-	StateRestarting
 	StateGameOver
-	StateWon
 )
 
 type Entity interface {
@@ -27,21 +25,22 @@ type Entity interface {
 }
 
 type Game struct {
-	body                 js.Value
-	document             js.Value
-	canvas               js.Value
-	ctx                  js.Value
-	prompt               js.Value
-	shouldReRenderPrompt bool
-	WindowWidth          int
-	WindowHeight         int
-	mouseX               int
-	mouseY               int
-	Entities             *[]Entity
-	State                *int
-	lastState            int
-	Points               int
-	lastPoints           int
+	body                   js.Value
+	document               js.Value
+	canvas                 js.Value
+	ctx                    js.Value
+	prompt                 js.Value
+	shouldReRenderPrompt   bool
+	WindowWidth            int
+	WindowHeight           int
+	mouseX                 int
+	mouseY                 int
+	Entities               *[]Entity
+	State                  int
+	lastState              int
+	Points                 int
+	lastPoints             int
+	addInitialEntitiesFunc func()
 }
 
 func NewGame(canvasId string) Game {
@@ -61,8 +60,7 @@ func NewGame(canvasId string) Game {
 	game.ctx.Call("fillRect", 0, 0, game.WindowWidth, game.WindowHeight)
 	game.Points = 0
 	game.lastPoints = -1
-	game.State = new(int)
-	*game.State = StateNormal
+	game.State = StateNormal
 	game.Entities = &[]Entity{}
 	time.Sleep(500 * time.Millisecond)
 	return game
@@ -84,36 +82,53 @@ func (g *Game) getMouseMoveEventListener() js.Func {
 	})
 }
 
-func (g *Game) setTextInPrompt(text string) {
-	g.prompt.Set("innerHTML", text)
+func (g *Game) SetAddInitialEntitiesFunc(function func()) {
+	g.addInitialEntitiesFunc = function
 }
 
-func (g *Game) showPromptForState(state int) {
-	if state != g.lastState {
+func (g *Game) restartGame() {
+	*g.Entities = []Entity{}
+	if g.addInitialEntitiesFunc == nil {
+		panic("No function was set to initialize entities. Call setAddInitialEntitiesFunc to correct this")
+	}
+	g.addInitialEntitiesFunc()
+	g.Points = 0
+	g.State = StateNormal
+}
+
+func (g *Game) setTryAgainButtonEventListener() {
+	eventListener := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		g.restartGame()
+		return nil
+	})
+	g.document.Call("getElementById", "try-again-button").Call("addEventListener", "click", eventListener)
+}
+
+func (g *Game) showPromptForState() {
+	if g.State != g.lastState {
 		g.shouldReRenderPrompt = true
 	}
 	if !g.shouldReRenderPrompt {
-		g.lastState = state
+		g.lastState = g.State
 		return
 	}
 
-	g.lastState = state
-
-	switch state {
+	switch g.State {
 	case StateNormal:
 		if g.lastPoints != g.Points {
-			g.setTextInPrompt("Points " + fmt.Sprint(g.Points))
+			g.prompt.Set("innerHTML", "Points "+fmt.Sprint(g.Points))
 		}
 		g.lastPoints = g.Points
 		g.shouldReRenderPrompt = true
-	case StateRestarting:
-		g.setTextInPrompt("We are restarting")
-		g.shouldReRenderPrompt = false
 	case StateGameOver:
-		g.setTextInPrompt("GAME OVER! Points " + fmt.Sprint(g.Points))
+		html := fmt.Sprintf(`GAME OVER! Points %d
+		<br><br>
+		<button id="try-again-button">Try again</button>`, g.Points)
+		g.prompt.Set("innerHTML", html)
+		g.setTryAgainButtonEventListener()
 		g.shouldReRenderPrompt = false
-
 	}
+	g.lastState = g.State
 
 }
 
@@ -130,9 +145,9 @@ func (g *Game) RunMainLoop() {
 	frameCount := 1
 
 	renderFrame = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		g.showPromptForState(*g.State)
+		g.showPromptForState()
 
-		if *g.State == StateGameOver {
+		if g.State == StateGameOver {
 			js.Global().Call("requestAnimationFrame", renderFrame)
 			return nil
 		}

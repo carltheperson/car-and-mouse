@@ -121,7 +121,7 @@ func (c *Car) Update(mouseX int, mouseY int, mpf float64) {
 	}
 
 	if c.IsTouchingMouse(mouseX, mouseY) || c.IsTouchingObstacle() || c.IsOutsideCanvas() {
-		*c.game.State = game.StateGameOver
+		c.game.State = game.StateGameOver
 	}
 
 	c.direction = c.direction - regulatedDirectedDifference*(mpf*10)
