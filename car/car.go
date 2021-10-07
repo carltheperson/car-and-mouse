@@ -11,7 +11,7 @@ const (
 	maxSpeed = 60
 	minSpeed = 40
 
-	maxTurningDif = 0.09
+	maxTurningDif = 0.075
 )
 
 type Car struct {

@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	skipFrequency = 1
+	skipFrequency = 3
 )
 
 type Entity interface {
@@ -44,11 +44,19 @@ func NewGame(canvasId string) Game {
 	return game
 }
 
+func (g *Game) getCanvasXAndY() (float64, float64) {
+	x := g.canvas.Call("getBoundingClientRect").Get("left").Float()
+	y := g.canvas.Call("getBoundingClientRect").Get("top").Float()
+
+	return x, y
+}
+
 func (g *Game) getMouseMoveEventListener() js.Func {
 	return js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		event := args[0]
-		g.mouseX = int(event.Get("clientX").Float())
-		g.mouseY = int(event.Get("clientY").Float())
+		canvasX, canvasY := g.getCanvasXAndY()
+		g.mouseX = int(event.Get("clientX").Float()) - int(canvasX)
+		g.mouseY = int(event.Get("clientY").Float()) - int(canvasY)
 		return nil
 	})
 }
