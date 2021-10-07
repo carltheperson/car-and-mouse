@@ -4,6 +4,7 @@ import (
 	stdMath "math"
 	"syscall/js"
 
+	"github.com/carltheperson/car-and-mouse/game"
 	"github.com/carltheperson/car-and-mouse/math"
 )
 
@@ -23,9 +24,10 @@ type Car struct {
 	height    int
 	direction float64
 	speed     float64
+	gameState *int
 }
 
-func NewCar(x int, y int) *Car {
+func NewCar(x int, y int, gameState *int) *Car {
 
 	return &Car{
 		x:         x,
@@ -34,13 +36,14 @@ func NewCar(x int, y int) *Car {
 		height:    50,
 		direction: 0.0,
 		speed:     maxSpeed / 2,
+		gameState: gameState,
 	}
 }
 
 func (c *Car) Draw(ctx js.Value) {
 	ctx.Call("beginPath")
 	ctx.Set("fillStyle", "#2e2e2e")
-	center := math.Vector2D{A: float64(c.x + c.width/2), B: float64(c.y + c.height/2)}
+	center := c.getCenter()
 
 	points := []math.Vector2D{
 		{A: float64(c.x), B: float64(c.y)},
@@ -56,6 +59,22 @@ func (c *Car) Draw(ctx js.Value) {
 
 	ctx.Call("closePath")
 	ctx.Call("fill")
+}
+
+func (c *Car) getCenter() math.Vector2D {
+	return math.Vector2D{A: float64(c.x + c.width/2), B: float64(c.y + c.height/2)}
+}
+
+func (c *Car) IsCarTouchingMouse(mouseX, mouseY int) bool {
+	center := c.getCenter()
+	mouse := math.Vector2D{A: float64(mouseX), B: float64(mouseY)}
+	transformedMousePoint := math.RotatePoint(mouse, center, stdMath.Mod(c.direction, 2*stdMath.Pi))
+	mX := int(transformedMousePoint.A)
+	mY := int(transformedMousePoint.B)
+	if mX > c.x && mX < c.x+c.width && mY > c.y && mY < c.y+c.height {
+		return true
+	}
+	return false
 }
 
 func (c *Car) ShouldDraw() bool {
@@ -74,9 +93,13 @@ func (c *Car) Update(mouseX int, mouseY int, mpf float64) {
 
 	turningFraction := stdMath.Abs(regulatedDirectedDifference) / maxTurningDif
 	if turningFraction > 0.5 {
-		c.speed -= (c.speed - minSpeed) * turningFraction * mpf * 0.4
+		c.speed -= (c.speed - minSpeed) * turningFraction * mpf * 0.25
 	} else {
-		c.speed += (maxSpeed - c.speed) * (1 - turningFraction) * mpf * 0.4
+		c.speed += (maxSpeed - c.speed) * (1 - turningFraction) * mpf * 0.25
+	}
+
+	if c.IsCarTouchingMouse(mouseX, mouseY) {
+		*c.gameState = game.StateLost
 	}
 
 	c.direction = c.direction - regulatedDirectedDifference*(mpf*10)

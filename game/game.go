@@ -1,12 +1,20 @@
 package game
 
 import (
+	"fmt"
 	"syscall/js"
 	"time"
 )
 
 const (
-	skipFrequency = 3
+	skipFrequency = 1
+)
+
+const (
+	StateNormal = iota
+	StateRestarting
+	StateLost
+	StateWon
 )
 
 type Entity interface {
@@ -16,15 +24,19 @@ type Entity interface {
 }
 
 type Game struct {
-	body         js.Value
-	document     js.Value
-	canvas       js.Value
-	ctx          js.Value
-	windowWidth  int
-	windowHeight int
-	mouseX       int
-	mouseY       int
-	Entities     []Entity
+	body                 js.Value
+	document             js.Value
+	canvas               js.Value
+	ctx                  js.Value
+	prompt               js.Value
+	shouldReRenderPrompt bool
+	windowWidth          int
+	windowHeight         int
+	mouseX               int
+	mouseY               int
+	Entities             []Entity
+	State                *int
+	lastState            int
 }
 
 func NewGame(canvasId string) Game {
@@ -32,6 +44,8 @@ func NewGame(canvasId string) Game {
 	game.document = js.Global().Get("document")
 	game.body = game.document.Get("body")
 	game.canvas = game.document.Call("getElementById", canvasId)
+	game.prompt = game.document.Call("getElementById", "prompt")
+	game.shouldReRenderPrompt = true
 	game.ctx = game.canvas.Call("getContext", "2d")
 	windowScreen := js.Global().Get("window").Get("screen")
 	game.windowWidth = int(windowScreen.Get("width").Float())
@@ -40,6 +54,8 @@ func NewGame(canvasId string) Game {
 	game.canvas.Set("height", 800)
 	game.ctx.Set("fillStyle", "white")
 	game.ctx.Call("fillRect", 0, 0, game.windowWidth, game.windowHeight)
+	game.State = new(int)
+	*game.State = StateNormal
 	time.Sleep(500 * time.Millisecond)
 	return game
 }
@@ -47,7 +63,6 @@ func NewGame(canvasId string) Game {
 func (g *Game) getCanvasXAndY() (float64, float64) {
 	x := g.canvas.Call("getBoundingClientRect").Get("left").Float()
 	y := g.canvas.Call("getBoundingClientRect").Get("top").Float()
-
 	return x, y
 }
 
@@ -59,6 +74,32 @@ func (g *Game) getMouseMoveEventListener() js.Func {
 		g.mouseY = int(event.Get("clientY").Float()) - int(canvasY)
 		return nil
 	})
+}
+
+func (g *Game) setTextInPrompt(text string) {
+	g.prompt.Set("innerHTML", text)
+}
+
+func (g *Game) showPromptForState(state int) {
+	if !g.shouldReRenderPrompt && state == g.lastState {
+		g.lastState = state
+		return
+	}
+	g.lastState = state
+
+	switch state {
+	case StateNormal:
+		g.setTextInPrompt("We are going")
+		g.shouldReRenderPrompt = false
+	case StateRestarting:
+		g.setTextInPrompt("We are restarting")
+		g.shouldReRenderPrompt = false
+	case StateLost:
+		g.setTextInPrompt("YOU LOST")
+		g.shouldReRenderPrompt = false
+
+	}
+
 }
 
 func (g *Game) RunMainLoop() {
@@ -74,6 +115,13 @@ func (g *Game) RunMainLoop() {
 	frameCount := 1
 
 	renderFrame = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		g.showPromptForState(*g.State)
+
+		if *g.State == StateLost {
+			js.Global().Call("requestAnimationFrame", renderFrame)
+			return nil
+		}
+
 		if frameCount%skipFrequency == 0 && skipFrequency != 1 && skipFrequency != 0 {
 			js.Global().Call("requestAnimationFrame", renderFrame)
 			return nil
@@ -88,6 +136,8 @@ func (g *Game) RunMainLoop() {
 				shouldDraw = true
 			}
 		}
+
+		fmt.Println()
 
 		if shouldDraw {
 			g.ctx.Call("clearRect", 0, 0, g.windowWidth, g.windowHeight)
