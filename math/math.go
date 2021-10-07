@@ -73,3 +73,7 @@ func RotatePoint(point Vector2D, center Vector2D, angle float64) Vector2D {
 func GetDirectionDifference(d1 float64, d2 float64) float64 {
 	return math.Atan2(math.Sin(d1-d2), math.Cos(d1-d2))
 }
+
+func GetDistanceBetweenTwoPoints(point1 Vector2D, point2 Vector2D) float64 {
+	return math.Sqrt(math.Pow(point1.A-point2.A, 2) + math.Pow(point1.B-point2.B, 2))
+}

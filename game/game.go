@@ -12,7 +12,7 @@ const (
 const (
 	StateNormal = iota
 	StateRestarting
-	StateLost
+	StateGameOver
 	StateWon
 )
 
@@ -93,7 +93,7 @@ func (g *Game) showPromptForState(state int) {
 	case StateRestarting:
 		g.setTextInPrompt("We are restarting")
 		g.shouldReRenderPrompt = false
-	case StateLost:
+	case StateGameOver:
 		g.setTextInPrompt("YOU LOST")
 		g.shouldReRenderPrompt = false
 
@@ -116,7 +116,7 @@ func (g *Game) RunMainLoop() {
 	renderFrame = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		g.showPromptForState(*g.State)
 
-		if *g.State == StateLost {
+		if *g.State == StateGameOver {
 			js.Global().Call("requestAnimationFrame", renderFrame)
 			return nil
 		}

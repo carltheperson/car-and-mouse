@@ -6,6 +6,7 @@ import (
 
 	"github.com/carltheperson/car-and-mouse/game"
 	"github.com/carltheperson/car-and-mouse/math"
+	"github.com/carltheperson/car-and-mouse/obstacle"
 )
 
 const (
@@ -24,10 +25,11 @@ type Car struct {
 	height    int
 	direction float64
 	speed     float64
-	gameState *int
+	obstacles []*obstacle.Obstacle
+	game      *game.Game
 }
 
-func NewCar(x int, y int, gameState *int) *Car {
+func NewCar(x int, y int, game *game.Game, obstacles []*obstacle.Obstacle) *Car {
 
 	return &Car{
 		x:         x,
@@ -36,7 +38,8 @@ func NewCar(x int, y int, gameState *int) *Car {
 		height:    50,
 		direction: 0.0,
 		speed:     maxSpeed / 2,
-		gameState: gameState,
+		obstacles: obstacles,
+		game:      game,
 	}
 }
 
@@ -65,7 +68,7 @@ func (c *Car) getCenter() math.Vector2D {
 	return math.Vector2D{A: float64(c.x + c.width/2), B: float64(c.y + c.height/2)}
 }
 
-func (c *Car) IsCarTouchingMouse(mouseX, mouseY int) bool {
+func (c *Car) IsTouchingMouse(mouseX, mouseY int) bool {
 	center := c.getCenter()
 	mouse := math.Vector2D{A: float64(mouseX), B: float64(mouseY)}
 	transformedMousePoint := math.RotatePoint(mouse, center, stdMath.Mod(c.direction, 2*stdMath.Pi))
@@ -73,6 +76,15 @@ func (c *Car) IsCarTouchingMouse(mouseX, mouseY int) bool {
 	mY := int(transformedMousePoint.B)
 	if mX > c.x && mX < c.x+c.width && mY > c.y && mY < c.y+c.height {
 		return true
+	}
+	return false
+}
+
+func (c *Car) IsTouchingObstacle() bool {
+	for _, o := range c.obstacles {
+		if int(math.GetDistanceBetweenTwoPoints(c.getCenter(), math.Vector2D{A: float64(o.X), B: float64(o.Y)})) < o.Diameter/2+c.height/3 {
+			return true
+		}
 	}
 	return false
 }
@@ -98,8 +110,8 @@ func (c *Car) Update(mouseX int, mouseY int, mpf float64) {
 		c.speed += (maxSpeed - c.speed) * (1 - turningFraction) * mpf * 0.25
 	}
 
-	if c.IsCarTouchingMouse(mouseX, mouseY) {
-		*c.gameState = game.StateLost
+	if c.IsTouchingMouse(mouseX, mouseY) || c.IsTouchingObstacle() {
+		*c.game.State = game.StateGameOver
 	}
 
 	c.direction = c.direction - regulatedDirectedDifference*(mpf*10)

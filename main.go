@@ -8,9 +8,12 @@ import (
 
 func main() {
 	g := game.NewGame("canvas")
-	g.Entities = append(g.Entities, car.NewCar(300, 300, g.State))
-	g.Entities = append(g.Entities, obstacle.NewObstacle(800, 800))
-	g.Entities = append(g.Entities, obstacle.NewObstacle(800, 800))
-	g.Entities = append(g.Entities, obstacle.NewObstacle(800, 800))
+	obstacles := []*obstacle.Obstacle{obstacle.NewObstacle(800, 800), obstacle.NewObstacle(800, 800)}
+	car := car.NewCar(300, 300, &g, obstacles)
+
+	g.Entities = append(g.Entities, car)
+	g.Entities = append(g.Entities, obstacles[0])
+	g.Entities = append(g.Entities, obstacles[1])
+
 	g.RunMainLoop()
 }

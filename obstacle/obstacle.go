@@ -21,9 +21,9 @@ const (
 )
 
 type Obstacle struct {
-	x             int
-	y             int
-	diameter      int
+	X             int
+	Y             int
+	Diameter      int
 	direction     math.Vector2D
 	spawningDelay float64
 	speed         float64
@@ -47,24 +47,24 @@ func (o *Obstacle) setRandomValues(canvasWidth, canvasHeight int) {
 	side := rand.Intn(5) + 1
 	switch side {
 	case 1:
-		o.x = rand.Intn(canvasWidth)
-		o.y = 0
+		o.X = rand.Intn(canvasWidth)
+		o.Y = 0
 	case 2:
-		o.x = rand.Intn(canvasWidth)
-		o.y = canvasHeight
+		o.X = rand.Intn(canvasWidth)
+		o.Y = canvasHeight
 	case 3:
-		o.x = 0
-		o.y = rand.Intn(canvasHeight)
+		o.X = 0
+		o.Y = rand.Intn(canvasHeight)
 	case 4:
-		o.x = canvasHeight
-		o.y = rand.Intn(canvasHeight)
+		o.X = canvasHeight
+		o.Y = rand.Intn(canvasHeight)
 	}
 
 	// Creating direction by pointing obstacle to random randomPoint inside canvas
 	randomPoint := math.Vector2D{A: float64(innerSpawningOffset + rand.Intn(canvasWidth-innerSpawningOffset*2)), B: float64(innerSpawningOffset + rand.Intn(canvasHeight-innerSpawningOffset*2))}
-	o.direction = math.Vector2D{A: randomPoint.A - float64(o.x), B: randomPoint.B - float64(o.y)}
+	o.direction = math.Vector2D{A: randomPoint.A - float64(o.X), B: randomPoint.B - float64(o.Y)}
 
-	o.diameter = minDiameter + rand.Intn(maxDiameter-minDiameter)
+	o.Diameter = minDiameter + rand.Intn(maxDiameter-minDiameter)
 	o.speed = minSpeed + rand.Float64()*(maxSpeed-minSpeed)
 	o.canvasWidth = canvasWidth
 	o.canvasHeight = canvasHeight
@@ -77,7 +77,7 @@ func (o *Obstacle) Draw(ctx js.Value) {
 		return
 	}
 	ctx.Call("beginPath")
-	ctx.Call("arc", o.x, o.y, o.diameter/2, 0, 2*stdMath.Pi, false)
+	ctx.Call("arc", o.X, o.Y, o.Diameter/2, 0, 2*stdMath.Pi, false)
 	ctx.Set("fillStyle", "salmon")
 	ctx.Call("fill")
 }
@@ -90,10 +90,10 @@ func (o *Obstacle) Update(mouseX int, mouseY int, mpf float64) {
 
 	directionUnitVector := o.direction.GetUnitVector()
 
-	o.x += int(directionUnitVector.A * mpf * o.speed)
-	o.y += int(directionUnitVector.B * mpf * o.speed)
+	o.X += int(directionUnitVector.A * mpf * o.speed)
+	o.Y += int(directionUnitVector.B * mpf * o.speed)
 
-	if o.x-o.diameter/2 > o.canvasWidth || o.y-o.diameter/2 > o.canvasHeight || o.x+o.diameter/2 < 0 || o.y+o.diameter/2 < 0 {
+	if o.X-o.Diameter/2 > o.canvasWidth || o.Y-o.Diameter/2 > o.canvasHeight || o.X+o.Diameter/2 < 0 || o.Y+o.Diameter/2 < 0 {
 		o.Reset()
 	}
 }
