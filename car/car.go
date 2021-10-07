@@ -68,6 +68,16 @@ func (c *Car) getCenter() math.Vector2D {
 	return math.Vector2D{A: float64(c.x + c.width/2), B: float64(c.y + c.height/2)}
 }
 
+func (c *Car) IsOutsideCanvas() bool {
+	center := c.getCenter()
+	x := center.A
+	y := center.B
+	if x > float64(game.CanvasWidth) || x < 0 || y > float64(game.CanvasHeight) || y < 0 {
+		return true
+	}
+	return false
+}
+
 func (c *Car) IsTouchingMouse(mouseX, mouseY int) bool {
 	center := c.getCenter()
 	mouse := math.Vector2D{A: float64(mouseX), B: float64(mouseY)}
@@ -110,7 +120,7 @@ func (c *Car) Update(mouseX int, mouseY int, mpf float64) {
 		c.speed += (maxSpeed - c.speed) * (1 - turningFraction) * mpf * 0.25
 	}
 
-	if c.IsTouchingMouse(mouseX, mouseY) || c.IsTouchingObstacle() {
+	if c.IsTouchingMouse(mouseX, mouseY) || c.IsTouchingObstacle() || c.IsOutsideCanvas() {
 		*c.game.State = game.StateGameOver
 	}
 

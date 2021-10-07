@@ -7,6 +7,9 @@ import (
 )
 
 const (
+	CanvasWidth  = 800
+	CanvasHeight = 800
+
 	skipFrequency = 1
 )
 
@@ -30,8 +33,8 @@ type Game struct {
 	ctx                  js.Value
 	prompt               js.Value
 	shouldReRenderPrompt bool
-	windowWidth          int
-	windowHeight         int
+	WindowWidth          int
+	WindowHeight         int
 	mouseX               int
 	mouseY               int
 	Entities             *[]Entity
@@ -50,12 +53,12 @@ func NewGame(canvasId string) Game {
 	game.shouldReRenderPrompt = true
 	game.ctx = game.canvas.Call("getContext", "2d")
 	windowScreen := js.Global().Get("window").Get("screen")
-	game.windowWidth = int(windowScreen.Get("width").Float())
-	game.windowHeight = int(windowScreen.Get("height").Float())
-	game.canvas.Set("width", 800)
-	game.canvas.Set("height", 800)
+	game.WindowWidth = int(windowScreen.Get("width").Float())
+	game.WindowHeight = int(windowScreen.Get("height").Float())
+	game.canvas.Set("width", CanvasWidth)
+	game.canvas.Set("height", CanvasHeight)
 	game.ctx.Set("fillStyle", "white")
-	game.ctx.Call("fillRect", 0, 0, game.windowWidth, game.windowHeight)
+	game.ctx.Call("fillRect", 0, 0, game.WindowWidth, game.WindowHeight)
 	game.Points = 0
 	game.lastPoints = -1
 	game.State = new(int)
@@ -150,7 +153,7 @@ func (g *Game) RunMainLoop() {
 		}
 
 		if shouldDraw {
-			g.ctx.Call("clearRect", 0, 0, g.windowWidth, g.windowHeight)
+			g.ctx.Call("clearRect", 0, 0, g.WindowWidth, g.WindowHeight)
 		}
 
 		for _, entity := range *g.Entities {
