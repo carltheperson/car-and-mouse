@@ -6,6 +6,7 @@ import (
 	"syscall/js"
 	"time"
 
+	"github.com/carltheperson/car-and-mouse/game"
 	"github.com/carltheperson/car-and-mouse/math"
 )
 
@@ -21,18 +22,20 @@ const (
 )
 
 type Obstacle struct {
-	X             int
-	Y             int
-	Diameter      int
-	direction     math.Vector2D
-	spawningDelay float64
-	speed         float64
-	canvasWidth   int
-	canvasHeight  int
+	X               int
+	Y               int
+	Diameter        int
+	game            *game.Game
+	direction       math.Vector2D
+	spawningDelay   float64
+	OnObstacleReset func(obs Obstacle)
+	speed           float64
+	canvasWidth     int
+	canvasHeight    int
 }
 
-func NewObstacle(canvasWidth, canvasHeight int) *Obstacle {
-	obs := Obstacle{}
+func NewObstacle(canvasWidth, canvasHeight int, game *game.Game, onObstacleReset func(obs Obstacle)) *Obstacle {
+	obs := Obstacle{game: game, OnObstacleReset: onObstacleReset}
 	obs.setRandomValues(canvasWidth, canvasHeight)
 	return &obs
 }
@@ -94,6 +97,7 @@ func (o *Obstacle) Update(mouseX int, mouseY int, mpf float64) {
 	o.Y += int(directionUnitVector.B * mpf * o.speed)
 
 	if o.X-o.Diameter/2 > o.canvasWidth || o.Y-o.Diameter/2 > o.canvasHeight || o.X+o.Diameter/2 < 0 || o.Y+o.Diameter/2 < 0 {
+		o.OnObstacleReset(*o)
 		o.Reset()
 	}
 }

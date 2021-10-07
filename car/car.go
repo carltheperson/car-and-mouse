@@ -25,11 +25,11 @@ type Car struct {
 	height    int
 	direction float64
 	speed     float64
-	obstacles []*obstacle.Obstacle
+	Obstacles *[]*obstacle.Obstacle
 	game      *game.Game
 }
 
-func NewCar(x int, y int, game *game.Game, obstacles []*obstacle.Obstacle) *Car {
+func NewCar(x int, y int, game *game.Game, obstacles *[]*obstacle.Obstacle) *Car {
 
 	return &Car{
 		x:         x,
@@ -37,8 +37,8 @@ func NewCar(x int, y int, game *game.Game, obstacles []*obstacle.Obstacle) *Car 
 		width:     25,
 		height:    50,
 		direction: 0.0,
-		speed:     maxSpeed / 2,
-		obstacles: obstacles,
+		speed:     minSpeed / 2,
+		Obstacles: obstacles,
 		game:      game,
 	}
 }
@@ -81,8 +81,8 @@ func (c *Car) IsTouchingMouse(mouseX, mouseY int) bool {
 }
 
 func (c *Car) IsTouchingObstacle() bool {
-	for _, o := range c.obstacles {
-		if int(math.GetDistanceBetweenTwoPoints(c.getCenter(), math.Vector2D{A: float64(o.X), B: float64(o.Y)})) < o.Diameter/2+c.height/3 {
+	for _, o := range *c.Obstacles {
+		if int(math.GetDistanceBetweenTwoPoints(c.getCenter(), math.Vector2D{A: float64(o.X), B: float64(o.Y)})) < o.Diameter/2+c.width/2 {
 			return true
 		}
 	}
