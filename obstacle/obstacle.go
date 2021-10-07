@@ -1,7 +1,6 @@
 package obstacle
 
 import (
-	"fmt"
 	stdMath "math"
 	"math/rand"
 	"syscall/js"
@@ -10,21 +9,26 @@ import (
 	"github.com/carltheperson/car-and-mouse/math"
 )
 
+var randomSeed = time.Now().UnixNano()
+
 const (
-	maxDiameter = 120
-	minDiameter = 40
-	minSpeed    = 30.0
-	maxSpeed    = 50.0
+	maxDiameter         = 120
+	minDiameter         = 40
+	minSpeed            = 30.0
+	maxSpeed            = 75.0
+	innerSpawningOffset = 50
+	maxSpawnDelay       = 25
 )
 
 type Obstacle struct {
-	x            int
-	y            int
-	diameter     int
-	direction    math.Vector2D
-	speed        float64
-	canvasWidth  int
-	canvasHeight int
+	x             int
+	y             int
+	diameter      int
+	direction     math.Vector2D
+	spawningDelay float64
+	speed         float64
+	canvasWidth   int
+	canvasHeight  int
 }
 
 func NewObstacle(canvasWidth, canvasHeight int) *Obstacle {
@@ -38,7 +42,8 @@ func (o *Obstacle) Reset() {
 }
 
 func (o *Obstacle) setRandomValues(canvasWidth, canvasHeight int) {
-	rand.Seed(time.Now().UnixNano())
+	rand.Seed(randomSeed)
+	randomSeed += time.Now().UnixNano()
 	side := rand.Intn(5) + 1
 	switch side {
 	case 1:
@@ -56,29 +61,41 @@ func (o *Obstacle) setRandomValues(canvasWidth, canvasHeight int) {
 	}
 
 	// Creating direction by pointing obstacle to random randomPoint inside canvas
-	randomPoint := math.Vector2D{A: float64(rand.Intn(canvasWidth)), B: float64(rand.Intn(canvasHeight))}
+	randomPoint := math.Vector2D{A: float64(innerSpawningOffset + rand.Intn(canvasWidth-innerSpawningOffset*2)), B: float64(innerSpawningOffset + rand.Intn(canvasHeight-innerSpawningOffset*2))}
 	o.direction = math.Vector2D{A: randomPoint.A - float64(o.x), B: randomPoint.B - float64(o.y)}
 
 	o.diameter = minDiameter + rand.Intn(maxDiameter-minDiameter)
 	o.speed = minSpeed + rand.Float64()*(maxSpeed-minSpeed)
+	o.canvasWidth = canvasWidth
+	o.canvasHeight = canvasHeight
 
-	fmt.Println(randomPoint)
-	fmt.Println(o.direction)
-
+	o.spawningDelay = float64(rand.Intn(maxSpawnDelay))
 }
 
 func (o *Obstacle) Draw(ctx js.Value) {
+	if o.spawningDelay > 0 {
+		return
+	}
 	ctx.Call("beginPath")
 	ctx.Call("arc", o.x, o.y, o.diameter/2, 0, 2*stdMath.Pi, false)
-	ctx.Set("fillStyle", "red")
+	ctx.Set("fillStyle", "salmon")
 	ctx.Call("fill")
 }
 
 func (o *Obstacle) Update(mouseX int, mouseY int, mpf float64) {
+	if o.spawningDelay > 0 {
+		o.spawningDelay -= mpf
+		return
+	}
+
 	directionUnitVector := o.direction.GetUnitVector()
 
 	o.x += int(directionUnitVector.A * mpf * o.speed)
 	o.y += int(directionUnitVector.B * mpf * o.speed)
+
+	if o.x-o.diameter/2 > o.canvasWidth || o.y-o.diameter/2 > o.canvasHeight || o.x+o.diameter/2 < 0 || o.y+o.diameter/2 < 0 {
+		o.Reset()
+	}
 }
 
 func (o *Obstacle) ShouldDraw() bool {
