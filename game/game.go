@@ -1,7 +1,6 @@
 package game
 
 import (
-	"fmt"
 	"syscall/js"
 	"time"
 )
@@ -89,7 +88,7 @@ func (g *Game) showPromptForState(state int) {
 
 	switch state {
 	case StateNormal:
-		g.setTextInPrompt("We are going")
+		g.setTextInPrompt("Gaming mode B-)")
 		g.shouldReRenderPrompt = false
 	case StateRestarting:
 		g.setTextInPrompt("We are restarting")
@@ -136,8 +135,6 @@ func (g *Game) RunMainLoop() {
 				shouldDraw = true
 			}
 		}
-
-		fmt.Println()
 
 		if shouldDraw {
 			g.ctx.Call("clearRect", 0, 0, g.windowWidth, g.windowHeight)
