@@ -13,9 +13,9 @@ const (
 	maxSpeed = 60
 	minSpeed = 40
 
-	maxTurningDif = 0.075
+	maxTurningDif = 0.05
 
-	spritePath = "/assets/car_sprite2.png"
+	spritePath = "/assets/car_sprite.png"
 )
 
 type Car struct {
