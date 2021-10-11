@@ -14,6 +14,8 @@ const (
 	minSpeed = 40
 
 	maxTurningDif = 0.075
+
+	spritePath = "/assets/car_sprite2.png"
 )
 
 type Car struct {
@@ -23,6 +25,7 @@ type Car struct {
 	lastY     int
 	width     int
 	height    int
+	sprite    js.Value
 	direction float64
 	speed     float64
 	Obstacles *[]*obstacle.Obstacle
@@ -30,16 +33,18 @@ type Car struct {
 }
 
 func NewCar(x int, y int, game *game.Game, obstacles *[]*obstacle.Obstacle) *Car {
-
+	sprite := js.Global().Get("Image").New()
+	sprite.Set("src", spritePath)
 	return &Car{
 		x:         x,
 		y:         y,
-		width:     25,
-		height:    50,
+		width:     sprite.Get("width").Int(),
+		height:    sprite.Get("height").Int(),
 		direction: 0.0,
 		speed:     minSpeed / 2,
 		Obstacles: obstacles,
 		game:      game,
+		sprite:    sprite,
 	}
 }
 
@@ -48,18 +53,10 @@ func (c *Car) Draw(ctx js.Value) {
 	ctx.Set("fillStyle", "#2e2e2e")
 	center := c.getCenter()
 
-	points := []math.Vector2D{
-		{A: float64(c.x), B: float64(c.y)},
-		{A: float64(c.x + c.width), B: float64(c.y)},
-		{A: float64(c.x + c.width), B: float64(c.y + c.height)},
-		{A: float64(c.x + c.width/2), B: float64(c.y + c.height + 10)},
-		{A: float64(c.x), B: float64(c.y + c.height)},
-	}
-	for _, point := range points {
-		transformedPoint := math.RotatePoint(point, center, stdMath.Mod(c.direction, 2*stdMath.Pi))
-		ctx.Call("lineTo", int(transformedPoint.A), int(transformedPoint.B))
-	}
-
+	ctx.Call("setTransform", 1, 0, 0, 1, center.A, center.B)
+	ctx.Call("rotate", stdMath.Mod(c.direction, 2*stdMath.Pi)+stdMath.Pi)
+	ctx.Call("drawImage", c.sprite, -c.width/2, -c.height/2)
+	ctx.Call("setTransform", 1, 0, 0, 1, 0, 0)
 	ctx.Call("closePath")
 	ctx.Call("fill")
 }

@@ -93,6 +93,7 @@ func (g *Game) restartGame() {
 	}
 	g.addInitialEntitiesFunc()
 	g.Points = 0
+	g.lastPoints = -1
 	g.State = StateNormal
 }
 
