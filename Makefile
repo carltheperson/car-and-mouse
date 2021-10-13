@@ -1,6 +1,7 @@
 all: build serve
 
 build-wasm:
+	cp $(shell go env GOROOT)/misc/wasm/wasm_exec.js website
 	GOOS=js GOARCH=wasm go build -o website/bin.wasm
 
 build-server:

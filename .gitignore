@@ -18,3 +18,4 @@ third_party
 tmp
 
 website/bin.wasm
+website/wasm_exec.js
