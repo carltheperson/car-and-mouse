@@ -15,8 +15,8 @@ func main() {
 		car := car.NewCar(400, 400, &g, &obstacles)
 
 		onObstacleReset := func(obs obstacle.Obstacle) {
-			g.Points += 1
-			if (g.Points < 5 || g.Points%2 == 0) && len(*car.Obstacles) < 15 {
+			g.Score += 1
+			if (g.Score < 5 || g.Score%2 == 0) && len(*car.Obstacles) < 15 {
 				newObstacle := obstacle.NewObstacle(&g, obs.OnObstacleReset)
 				*g.Entities = append(*g.Entities, newObstacle)
 				*car.Obstacles = append(*car.Obstacles, newObstacle)

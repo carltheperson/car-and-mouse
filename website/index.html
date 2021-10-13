@@ -7,6 +7,10 @@
 
   <body>
     <h1>🚗 and 🐁</h1>
+    <div id="score-header">
+      <div><p id="score">Score 0</p></div>
+      <div><p id="highscore">Highscore ?</p></div>
+    </div>
     <canvas id="canvas"></canvas>
     <div id="prompt"></div>
 
@@ -31,6 +35,17 @@
         margin: auto;
         margin-bottom: 20px;
         display: block;
+      }
+
+      #score-header {
+        margin: auto;
+        width: 800px;
+        justify-content: space-between;
+        display: flex;
+      }
+
+      #score-header p {
+        margin: 2px;
       }
     </style>
 

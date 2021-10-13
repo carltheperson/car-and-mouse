@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"strconv"
 	"syscall/js"
 	"time"
 )
@@ -10,7 +11,8 @@ const (
 	CanvasWidth  = 800
 	CanvasHeight = 800
 
-	skipFrequency = 1
+	skipFrequency            = 1
+	highscoreLocalStorageKey = "highstore"
 )
 
 const (
@@ -27,9 +29,13 @@ type Entity interface {
 type Game struct {
 	body                   js.Value
 	document               js.Value
+	window                 js.Value
 	canvas                 js.Value
 	ctx                    js.Value
-	prompt                 js.Value
+	promptElement          js.Value
+	scoreElement           js.Value
+	highscoreElement       js.Value
+	highscore              int
 	shouldReRenderPrompt   bool
 	WindowWidth            int
 	WindowHeight           int
@@ -38,17 +44,21 @@ type Game struct {
 	Entities               *[]Entity
 	State                  int
 	lastState              int
-	Points                 int
-	lastPoints             int
+	Score                  int
+	lastScore              int
 	addInitialEntitiesFunc func()
 }
 
 func NewGame(canvasId string) Game {
 	game := Game{}
+	game.window = js.Global().Get("window")
 	game.document = js.Global().Get("document")
 	game.body = game.document.Get("body")
 	game.canvas = game.document.Call("getElementById", canvasId)
-	game.prompt = game.document.Call("getElementById", "prompt")
+	game.promptElement = game.document.Call("getElementById", "prompt")
+	game.scoreElement = game.document.Call("getElementById", "score")
+	game.highscoreElement = game.document.Call("getElementById", "highscore")
+	game.highscore = game.getHighscore()
 	game.shouldReRenderPrompt = true
 	game.ctx = game.canvas.Call("getContext", "2d")
 	windowScreen := js.Global().Get("window").Get("screen")
@@ -58,8 +68,8 @@ func NewGame(canvasId string) Game {
 	game.canvas.Set("height", CanvasHeight)
 	game.ctx.Set("fillStyle", "white")
 	game.ctx.Call("fillRect", 0, 0, game.WindowWidth, game.WindowHeight)
-	game.Points = 0
-	game.lastPoints = -1
+	game.Score = 0
+	game.lastScore = -1
 	game.State = StateNormal
 	game.Entities = &[]Entity{}
 	time.Sleep(500 * time.Millisecond)
@@ -92,8 +102,8 @@ func (g *Game) restartGame() {
 		panic("No function was set to initialize entities. Call setAddInitialEntitiesFunc to correct this")
 	}
 	g.addInitialEntitiesFunc()
-	g.Points = 0
-	g.lastPoints = -1
+	g.Score = 0
+	g.lastScore = -1
 	g.State = StateNormal
 }
 
@@ -105,7 +115,25 @@ func (g *Game) setTryAgainButtonEventListener() {
 	g.document.Call("getElementById", "try-again-button").Call("addEventListener", "click", eventListener)
 }
 
-func (g *Game) showPromptForState() {
+func (g *Game) getHighscore() int {
+	highscoreStringJS := g.window.Get("localStorage").Call("getItem", highscoreLocalStorageKey)
+	if highscoreStringJS.IsNull() {
+		g.setHighscoreInLocalStorage(0)
+		return 0
+	}
+	highscoreString := highscoreStringJS.String()
+	highscore, err := strconv.Atoi(highscoreString)
+	if err != nil {
+		panic(err)
+	}
+	return highscore
+}
+
+func (g *Game) setHighscoreInLocalStorage(newHighscore int) {
+	g.window.Get("localStorage").Call("setItem", highscoreLocalStorageKey, fmt.Sprint(newHighscore))
+}
+
+func (g *Game) renderGameState() {
 	if g.State != g.lastState {
 		g.shouldReRenderPrompt = true
 	}
@@ -116,21 +144,26 @@ func (g *Game) showPromptForState() {
 
 	switch g.State {
 	case StateNormal:
-		if g.lastPoints != g.Points {
-			g.prompt.Set("innerHTML", "Points "+fmt.Sprint(g.Points))
+		if g.lastScore != g.Score {
+			if g.Score > g.highscore {
+				g.highscore = g.Score
+				g.setHighscoreInLocalStorage(g.highscore)
+			}
+
+			g.scoreElement.Set("innerText", "Score "+fmt.Sprint(g.Score))
+			g.highscoreElement.Set("innerText", "Highscore "+fmt.Sprint(g.highscore))
+			g.promptElement.Set("innerHTML", "")
 		}
-		g.lastPoints = g.Points
+		g.lastScore = g.Score
 		g.shouldReRenderPrompt = true
+
 	case StateGameOver:
-		html := fmt.Sprintf(`GAME OVER! Points %d
-		<br><br>
-		<button id="try-again-button">Try again</button>`, g.Points)
-		g.prompt.Set("innerHTML", html)
+		html := "<h1 style=\"margin: 3px\">GAME OVER!</h1><br><button id=\"try-again-button\">Try again</button>"
+		g.promptElement.Set("innerHTML", html)
 		g.setTryAgainButtonEventListener()
 		g.shouldReRenderPrompt = false
 	}
 	g.lastState = g.State
-
 }
 
 func (g *Game) RunMainLoop() {
@@ -146,7 +179,7 @@ func (g *Game) RunMainLoop() {
 	frameCount := 1
 
 	renderFrame = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		g.showPromptForState()
+		g.renderGameState()
 
 		if g.State == StateGameOver {
 			js.Global().Call("requestAnimationFrame", renderFrame)
