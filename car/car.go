@@ -13,6 +13,8 @@ const (
 	maxSpeed = 60
 	minSpeed = 40
 
+	allowedCanvasOverlap = 25
+
 	maxTurningDif = 0.05
 
 	spritePath = "/assets/car_sprite.png"
@@ -66,11 +68,10 @@ func (c *Car) getCenter() math.Vector2D {
 }
 
 func (c *Car) IsOutsideCanvas() bool {
-	center := c.getCenter()
-	x := center.A
-	y := center.B
-	if x > float64(game.CanvasWidth) || x < 0 || y > float64(game.CanvasHeight) || y < 0 {
-		return true
+	for _, corner := range c.getTransformedCorners() {
+		if corner.A > float64(game.CanvasWidth)+allowedCanvasOverlap || corner.A < 0-allowedCanvasOverlap || corner.B > game.CanvasHeight+allowedCanvasOverlap || corner.B < 0-allowedCanvasOverlap {
+			return true
+		}
 	}
 	return false
 }
