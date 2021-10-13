@@ -10,8 +10,8 @@ const (
 	CanvasWidth  = 800
 	CanvasHeight = 800
 
-	skipFrequency            = 1
 	highscoreLocalStorageKey = "highstore"
+	gameOverHtml             = "<h1 style=\"margin: 3px\">GAME OVER!</h1><br><button id=\"try-again-button\">Try again</button>"
 )
 
 const (
@@ -101,11 +101,6 @@ func (g *Game) renderGameState() {
 	switch g.State {
 	case StateNormal:
 		if g.lastScore != g.Score {
-			if g.Score > g.highscore {
-				g.highscore = g.Score
-				g.setHighscoreInLocalStorage(g.highscore)
-			}
-
 			g.scoreElement.Set("innerText", "Score "+fmt.Sprint(g.Score))
 			g.highscoreElement.Set("innerText", "Highscore "+fmt.Sprint(g.highscore))
 			g.promptElement.Set("innerHTML", "")
@@ -114,8 +109,7 @@ func (g *Game) renderGameState() {
 		g.shouldReRenderPrompt = true
 
 	case StateGameOver:
-		html := "<h1 style=\"margin: 3px\">GAME OVER!</h1><br><button id=\"try-again-button\">Try again</button>"
-		g.promptElement.Set("innerHTML", html)
+		g.promptElement.Set("innerHTML", gameOverHtml)
 		g.setTryAgainButtonEventListener()
 		g.shouldReRenderPrompt = false
 	}
@@ -129,9 +123,7 @@ func (g *Game) RunMainLoop() {
 	g.document.Call("addEventListener", "mousemove", mouseMoveEventListener)
 
 	var renderFrame js.Func
-	var mpf float64
 	frameTime := time.Now()
-	frameCount := 1
 
 	renderFrame = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		g.renderGameState()
@@ -141,12 +133,12 @@ func (g *Game) RunMainLoop() {
 			return nil
 		}
 
-		if frameCount%skipFrequency == 0 && skipFrequency != 1 && skipFrequency != 0 {
-			js.Global().Call("requestAnimationFrame", renderFrame)
-			return nil
+		if g.Score > g.highscore {
+			g.highscore = g.Score
+			g.setHighscoreInLocalStorage(g.highscore)
 		}
 
-		mpf = 1 / float64(time.Since(frameTime).Milliseconds())
+		mpf := 1 / float64(time.Since(frameTime).Milliseconds())
 		frameTime = time.Now()
 
 		g.ctx.Call("clearRect", 0, 0, g.WindowWidth, g.WindowHeight)
@@ -154,7 +146,6 @@ func (g *Game) RunMainLoop() {
 		for _, entity := range *g.Entities {
 			entity.Update(g.mouseX, g.mouseY, mpf)
 			entity.Draw(g.ctx)
-
 		}
 
 		js.Global().Call("requestAnimationFrame", renderFrame)
