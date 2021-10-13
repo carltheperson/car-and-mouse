@@ -13,7 +13,7 @@ const (
 	maxSpeed = 60
 	minSpeed = 40
 
-	allowedCanvasOverlap = 25
+	allowedCollisionOverlap = 25
 
 	maxTurningDif = 0.05
 
@@ -69,7 +69,7 @@ func (c *Car) getCenter() math.Vector2D {
 
 func (c *Car) IsOutsideCanvas() bool {
 	for _, corner := range c.getTransformedCorners() {
-		if corner.A > float64(game.CanvasWidth)+allowedCanvasOverlap || corner.A < 0-allowedCanvasOverlap || corner.B > game.CanvasHeight+allowedCanvasOverlap || corner.B < 0-allowedCanvasOverlap {
+		if corner.A > float64(game.CanvasWidth)+allowedCollisionOverlap || corner.A < 0-allowedCollisionOverlap || corner.B > game.CanvasHeight+allowedCollisionOverlap || corner.B < 0-allowedCollisionOverlap {
 			return true
 		}
 	}
@@ -91,11 +91,11 @@ func (c *Car) IsTouchingMouse(mouseX, mouseY int) bool {
 func (c *Car) IsTouchingObstacle() bool {
 	for _, o := range *c.Obstacles {
 		obs := math.Vector2D{A: float64(o.X), B: float64(o.Y)}
-		if int(math.GetDistanceBetweenTwoPoints(c.getCenter(), obs)) < o.Diameter/2+c.width/2 {
+		if int(math.GetDistanceBetweenTwoPoints(c.getCenter(), obs))+allowedCollisionOverlap/2 < o.Diameter/2+c.width/2 {
 			return true
 		}
 		for _, corner := range c.getTransformedCorners() {
-			if int(math.GetDistanceBetweenTwoPoints(corner, obs)) < o.Diameter/2 {
+			if int(math.GetDistanceBetweenTwoPoints(corner, obs))+allowedCollisionOverlap/2 < o.Diameter/2 {
 				return true
 			}
 		}
@@ -118,10 +118,6 @@ func (c *Car) getTransformedCorners() []math.Vector2D {
 	}
 
 	return transformedPoints
-}
-
-func (c *Car) ShouldDraw() bool {
-	return c.lastX != c.x || c.lastY != c.y
 }
 
 func (c *Car) Update(mouseX int, mouseY int, mpf float64) {

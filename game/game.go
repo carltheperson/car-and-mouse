@@ -23,7 +23,6 @@ const (
 type Entity interface {
 	Draw(ctx js.Value)
 	Update(mouseX int, mouseY int, mpf float64)
-	ShouldDraw() bool
 }
 
 type Game struct {
@@ -194,22 +193,12 @@ func (g *Game) RunMainLoop() {
 		mpf = 1 / float64(time.Since(frameTime).Milliseconds())
 		frameTime = time.Now()
 
-		shouldDraw := false
-		for _, entity := range *g.Entities {
-			if entity.ShouldDraw() {
-				shouldDraw = true
-			}
-		}
-
-		if shouldDraw {
-			g.ctx.Call("clearRect", 0, 0, g.WindowWidth, g.WindowHeight)
-		}
+		g.ctx.Call("clearRect", 0, 0, g.WindowWidth, g.WindowHeight)
 
 		for _, entity := range *g.Entities {
 			entity.Update(g.mouseX, g.mouseY, mpf)
-			if shouldDraw {
-				entity.Draw(g.ctx)
-			}
+			entity.Draw(g.ctx)
+
 		}
 
 		js.Global().Call("requestAnimationFrame", renderFrame)

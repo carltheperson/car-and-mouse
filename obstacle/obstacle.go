@@ -100,7 +100,3 @@ func (o *Obstacle) Update(mouseX int, mouseY int, mpf float64) {
 		o.Reset()
 	}
 }
-
-func (o *Obstacle) ShouldDraw() bool {
-	return true
-}
