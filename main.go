@@ -16,7 +16,7 @@ func main() {
 
 		onObstacleReset := func(obs obstacle.Obstacle) {
 			g.Score += 1
-			if (g.Score < 5 || g.Score%2 == 0) && len(*car.Obstacles) < 15 {
+			if (g.Score < 5 || g.Score%2 == 0) && len(*car.Obstacles) < 10 {
 				newObstacle := obstacle.NewObstacle(&g, obs.OnObstacleReset)
 				*g.Entities = append(*g.Entities, newObstacle)
 				*car.Obstacles = append(*car.Obstacles, newObstacle)
@@ -29,7 +29,7 @@ func main() {
 	}
 	addInitialEntities()
 
-	g.SetAddInitialEntitiesFunc(addInitialEntities)
+	g.SetRestartFunc(addInitialEntities)
 
 	g.RunMainLoop()
 }

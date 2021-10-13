@@ -13,12 +13,11 @@ import (
 var randomSeed = time.Now().UnixNano()
 
 const (
-	maxDiameter         = 120
-	minDiameter         = 40
-	minSpeed            = 30.0
-	maxSpeed            = 75.0
-	innerSpawningOffset = 0
-	maxSpawnDelay       = 25
+	maxDiameter   = 120
+	minDiameter   = 40
+	minSpeed      = 30.0
+	maxSpeed      = 75.0
+	maxSpawnDelay = 25
 )
 
 type Obstacle struct {
@@ -62,7 +61,7 @@ func (o *Obstacle) setRandomValues() {
 	}
 
 	// Creating direction by pointing obstacle to random randomPoint inside canvas
-	randomPoint := math.Vector2D{A: float64(innerSpawningOffset + rand.Intn(game.CanvasWidth-innerSpawningOffset*2)), B: float64(innerSpawningOffset + rand.Intn(game.CanvasHeight-innerSpawningOffset*2))}
+	randomPoint := math.Vector2D{A: float64(rand.Intn(game.CanvasWidth)), B: float64(rand.Intn(game.CanvasHeight))}
 	o.direction = math.Vector2D{A: randomPoint.A - float64(o.X), B: randomPoint.B - float64(o.Y)}
 
 	o.Diameter = minDiameter + rand.Intn(maxDiameter-minDiameter)

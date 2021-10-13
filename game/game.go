@@ -2,7 +2,6 @@ package game
 
 import (
 	"fmt"
-	"strconv"
 	"syscall/js"
 	"time"
 )
@@ -88,47 +87,6 @@ func (g *Game) getMouseMoveEventListener() js.Func {
 		g.mouseY = int(event.Get("clientY").Float()) - int(canvasY)
 		return nil
 	})
-}
-
-func (g *Game) SetAddInitialEntitiesFunc(function func()) {
-	g.addInitialEntitiesFunc = function
-}
-
-func (g *Game) restartGame() {
-	*g.Entities = []Entity{}
-	if g.addInitialEntitiesFunc == nil {
-		panic("No function was set to initialize entities. Call setAddInitialEntitiesFunc to correct this")
-	}
-	g.addInitialEntitiesFunc()
-	g.Score = 0
-	g.lastScore = -1
-	g.State = StateNormal
-}
-
-func (g *Game) setTryAgainButtonEventListener() {
-	eventListener := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		g.restartGame()
-		return nil
-	})
-	g.document.Call("getElementById", "try-again-button").Call("addEventListener", "click", eventListener)
-}
-
-func (g *Game) getHighscore() int {
-	highscoreStringJS := g.window.Get("localStorage").Call("getItem", highscoreLocalStorageKey)
-	if highscoreStringJS.IsNull() {
-		g.setHighscoreInLocalStorage(0)
-		return 0
-	}
-	highscoreString := highscoreStringJS.String()
-	highscore, err := strconv.Atoi(highscoreString)
-	if err != nil {
-		panic(err)
-	}
-	return highscore
-}
-
-func (g *Game) setHighscoreInLocalStorage(newHighscore int) {
-	g.window.Get("localStorage").Call("setItem", highscoreLocalStorageKey, fmt.Sprint(newHighscore))
 }
 
 func (g *Game) renderGameState() {
