@@ -10,8 +10,10 @@ import (
 )
 
 const (
-	maxSpeed = 60
-	minSpeed = 40
+	maxSpeed     = 60
+	minSpeed     = 40
+	spriteWidth  = 75
+	spriteHeight = 165
 
 	allowedCollisionOverlap = 25
 
@@ -40,8 +42,8 @@ func NewCar(x int, y int, game *game.Game, obstacles *[]*obstacle.Obstacle) *Car
 	return &Car{
 		x:         x,
 		y:         y,
-		width:     sprite.Get("width").Int(),
-		height:    sprite.Get("height").Int(),
+		width:     spriteWidth,
+		height:    spriteHeight,
 		direction: 0.0,
 		speed:     minSpeed / 2,
 		Obstacles: obstacles,

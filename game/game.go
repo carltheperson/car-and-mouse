@@ -71,7 +71,6 @@ func NewGame(canvasId string) Game {
 	game.lastScore = -1
 	game.State = StateNormal
 	game.Entities = &[]Entity{}
-	time.Sleep(500 * time.Millisecond)
 	return game
 }
 
@@ -169,7 +168,6 @@ func (g *Game) RunMainLoop() {
 	c := make(chan bool)
 
 	mouseMoveEventListener := g.getMouseMoveEventListener()
-	defer mouseMoveEventListener.Release()
 	g.document.Call("addEventListener", "mousemove", mouseMoveEventListener)
 
 	var renderFrame js.Func
