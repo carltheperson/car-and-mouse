@@ -89,11 +89,34 @@ func (c *Car) IsTouchingMouse(mouseX, mouseY int) bool {
 
 func (c *Car) IsTouchingObstacle() bool {
 	for _, o := range *c.Obstacles {
-		if int(math.GetDistanceBetweenTwoPoints(c.getCenter(), math.Vector2D{A: float64(o.X), B: float64(o.Y)})) < o.Diameter/2+c.width/2 {
+		obs := math.Vector2D{A: float64(o.X), B: float64(o.Y)}
+		if int(math.GetDistanceBetweenTwoPoints(c.getCenter(), obs)) < o.Diameter/2+c.width/2 {
 			return true
+		}
+		for _, corner := range c.getTransformedCorners() {
+			if int(math.GetDistanceBetweenTwoPoints(corner, obs)) < o.Diameter/2 {
+				return true
+			}
 		}
 	}
 	return false
+}
+
+func (c *Car) getTransformedCorners() []math.Vector2D {
+	center := c.getCenter()
+	points := []math.Vector2D{
+		{A: float64(c.x), B: float64(c.y)},
+		{A: float64(c.x + c.width), B: float64(c.y)},
+		{A: float64(c.x + c.width), B: float64(c.y + c.height)},
+		{A: float64(c.x), B: float64(c.y + c.height)},
+	}
+
+	transformedPoints := []math.Vector2D{}
+	for _, point := range points {
+		transformedPoints = append(transformedPoints, math.RotatePoint(point, center, stdMath.Mod(c.direction, 2*stdMath.Pi)))
+	}
+
+	return transformedPoints
 }
 
 func (c *Car) ShouldDraw() bool {
