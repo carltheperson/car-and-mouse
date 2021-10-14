@@ -69,7 +69,7 @@ func (c *Car) Update(mouseX int, mouseY int, mpf float64) {
 	c.lastX = c.x
 	c.lastY = c.y
 
-	mouseVector := math.Vector2D{A: float64(mouseX - (c.x + c.width/2)), B: float64(mouseY - (c.y + c.height/2))}
+	mouseVector := math.Vector{A: float64(mouseX - (c.x + c.width/2)), B: float64(mouseY - (c.y + c.height/2))}
 	mouseRadians := math.ConvertDirectionVectorToRadians(mouseVector.GetUnitVector())
 
 	directionDifference := math.GetDirectionDifference(c.direction, mouseRadians)

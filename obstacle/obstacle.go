@@ -25,7 +25,7 @@ type Obstacle struct {
 	Y               int
 	Diameter        int
 	game            *game.Game
-	direction       math.Vector2D
+	direction       math.Vector
 	spawningDelay   float64
 	OnObstacleReset func(obs Obstacle)
 	speed           float64
@@ -61,8 +61,8 @@ func (o *Obstacle) setRandomValues() {
 	}
 
 	// Creating direction by pointing obstacle to random randomPoint inside canvas
-	randomPoint := math.Vector2D{A: float64(rand.Intn(game.CanvasWidth)), B: float64(rand.Intn(game.CanvasHeight))}
-	o.direction = math.Vector2D{A: randomPoint.A - float64(o.X), B: randomPoint.B - float64(o.Y)}
+	randomPoint := math.Vector{A: float64(rand.Intn(game.CanvasWidth)), B: float64(rand.Intn(game.CanvasHeight))}
+	o.direction = math.Vector{A: randomPoint.A - float64(o.X), B: randomPoint.B - float64(o.Y)}
 
 	o.Diameter = minDiameter + rand.Intn(maxDiameter-minDiameter)
 	o.speed = minSpeed + rand.Float64()*(maxSpeed-minSpeed)

@@ -7,8 +7,8 @@ import (
 	"github.com/carltheperson/car-and-mouse/math"
 )
 
-func (c *Car) getCenter() math.Vector2D {
-	return math.Vector2D{A: float64(c.x + c.width/2), B: float64(c.y + c.height/2)}
+func (c *Car) getCenter() math.Vector {
+	return math.Vector{A: float64(c.x + c.width/2), B: float64(c.y + c.height/2)}
 }
 
 func (c *Car) IsOutsideCanvas() bool {
@@ -22,7 +22,7 @@ func (c *Car) IsOutsideCanvas() bool {
 
 func (c *Car) IsTouchingMouse(mouseX, mouseY int) bool {
 	center := c.getCenter()
-	mouse := math.Vector2D{A: float64(mouseX), B: float64(mouseY)}
+	mouse := math.Vector{A: float64(mouseX), B: float64(mouseY)}
 	transformedMousePoint := math.RotatePoint(mouse, center, stdMath.Mod(c.direction, 2*stdMath.Pi))
 	mX := int(transformedMousePoint.A)
 	mY := int(transformedMousePoint.B)
@@ -34,7 +34,7 @@ func (c *Car) IsTouchingMouse(mouseX, mouseY int) bool {
 
 func (c *Car) IsTouchingObstacle() bool {
 	for _, o := range *c.Obstacles {
-		obs := math.Vector2D{A: float64(o.X), B: float64(o.Y)}
+		obs := math.Vector{A: float64(o.X), B: float64(o.Y)}
 		if int(math.GetDistanceBetweenTwoPoints(c.getCenter(), obs))+allowedCollisionOverlap/2 < o.Diameter/2+c.width/2 {
 			return true
 		}
@@ -47,16 +47,16 @@ func (c *Car) IsTouchingObstacle() bool {
 	return false
 }
 
-func (c *Car) getTransformedCorners() []math.Vector2D {
+func (c *Car) getTransformedCorners() []math.Vector {
 	center := c.getCenter()
-	points := []math.Vector2D{
+	points := []math.Vector{
 		{A: float64(c.x), B: float64(c.y)},
 		{A: float64(c.x + c.width), B: float64(c.y)},
 		{A: float64(c.x + c.width), B: float64(c.y + c.height)},
 		{A: float64(c.x), B: float64(c.y + c.height)},
 	}
 
-	transformedPoints := []math.Vector2D{}
+	transformedPoints := []math.Vector{}
 	for _, point := range points {
 		transformedPoints = append(transformedPoints, math.RotatePoint(point, center, stdMath.Mod(c.direction, 2*stdMath.Pi)))
 	}
