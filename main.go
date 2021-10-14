@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	g := game.NewGame("canvas")
+	g := game.NewGame()
 
 	addInitialEntities := func() {
 		obstacles := []*obstacle.Obstacle{}

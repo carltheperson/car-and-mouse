@@ -11,6 +11,7 @@ const (
 	CanvasHeight = 800
 
 	highscoreLocalStorageKey = "highstore"
+	canvasId                 = "canvas"
 	gameOverHtml             = "<h1 style=\"margin: 3px\">GAME OVER!</h1><br><button id=\"try-again-button\">Try again</button>"
 )
 
@@ -47,7 +48,7 @@ type Game struct {
 	addInitialEntitiesFunc func()
 }
 
-func NewGame(canvasId string) Game {
+func NewGame() Game {
 	game := Game{}
 	game.window = js.Global().Get("window")
 	game.document = js.Global().Get("document")
@@ -128,14 +129,14 @@ func (g *Game) RunMainLoop() {
 	renderFrame = js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		g.renderGameState()
 
-		if g.State == StateGameOver {
-			js.Global().Call("requestAnimationFrame", renderFrame)
-			return nil
-		}
-
 		if g.Score > g.highscore {
 			g.highscore = g.Score
 			g.setHighscoreInLocalStorage(g.highscore)
+		}
+
+		if g.State == StateGameOver {
+			js.Global().Call("requestAnimationFrame", renderFrame)
+			return nil
 		}
 
 		mpf := 1 / float64(time.Since(frameTime).Milliseconds())
