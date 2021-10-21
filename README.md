@@ -3,6 +3,7 @@
 <p align="center">
 	<img src="logo.png" alt="logo">
 </p>
+<p align="center"><i>This game is listed as an example in the offical <a href="https://github.com/golang/go/wiki/WebAssembly#canvas-2d">Go wiki</a> </i></p>
 
 **You can see a live demo [here](https://car-and-mouse.web.app/)**
 
