@@ -139,7 +139,8 @@ func (g *Game) RunMainLoop() {
 			return nil
 		}
 
-		mpf := 1 / float64(time.Since(frameTime).Milliseconds())
+		mpf := float64(time.Since(frameTime).Milliseconds()) * 0.008
+		fmt.Println(mpf)
 		frameTime = time.Now()
 
 		g.ctx.Call("clearRect", 0, 0, g.WindowWidth, g.WindowHeight)
